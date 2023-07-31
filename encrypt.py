@@ -17,12 +17,37 @@ def create_public_key(private):
     return {'N':N, 'e': e}
 
 """
+To get the reverse value used to decrypt messages the Euclide's algorithm is used
+https://en.wikipedia.org/wiki/Euclidean_algorithm
+"""
+def euklides(a, n):
+    t, newt = 0, 1
+    r, newr = n, a
+
+    while newr:
+        quotient = r // newr  # floor division
+        t, newt = newt, t - quotient * newt
+        r, newr = newr, r - quotient * newr
+
+    if r > 1:
+        return None  # there's no solution
+
+    if t < 0:
+        t = t + n
+
+    return t
+"""
+
 To be able to decode the message, the two private primes 'p' and 'q' are needed together with the public one 'e'.
 A third number, the decryption key 'd' is also needed.
-The formula to get 'd' is e*d = 1 (mod(p-1)*(q-1))
+The formula to get 'd' is e*d = 1 (mod(p-1)*(q-1)). This is done with Euklides algorithm
 """
 def calculate_decryption_key(private, public):
-    private['d'] = 23
+    mod = (private['p'] - 1) * (private['q'] - 1)
+    d = euklides(public['e'], mod)
+    if d == None:
+        return None
+    private['d'] = d
     return private
 
 """
@@ -57,4 +82,4 @@ if __name__ == "__main__":
     message = str(input("Bob, Enter the character you want to send: "))
     encrypted = encrypt(alice_pub, message)
     print(f"The message was {message} and it was encrypted to {encrypted}")
-    print(f"Alice got the message {decrypt(alice_pk, encrypted)}")
+    print(f"Alice decrypted the the message to {decrypt(alice_pk, encrypted)}")
